@@ -1,4 +1,4 @@
-/* Reset básico */
+﻿/* Reset bÃ¡sico */
 html,
 body {
     margin: 0;
@@ -13,7 +13,7 @@ body {
     position: fixed;
     width: 100%;
     height: 100%;
-    background: linear-gradient(rgba(6, 8, 14, 0.42), rgba(6, 8, 14, 0.42)), url("../assets/img/menu.jpg") center / cover no-repeat;
+    background: linear-gradient(rgba(6, 8, 14, 0.42), rgba(6, 8, 14, 0.42)), url("../assets/img/menu.png") center / cover no-repeat;
     overflow: hidden;
 }
 
@@ -64,7 +64,7 @@ body {
     width: min(70vw, 520px);
 }
 
-/* Logo abaixo do último botão */
+/* Logo abaixo do Ãºltimo botÃ£o */
 #menu::after {
     content: "";
     display: block;
@@ -117,3 +117,4 @@ button:hover,
         margin-top: 10px;
     }
 }
+

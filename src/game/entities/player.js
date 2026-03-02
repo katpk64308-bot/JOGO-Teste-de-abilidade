@@ -2,8 +2,8 @@
 class Player {
     constructor() {
         // Tamanho e posicao inicial
-        this.width = 50;
-        this.height = 80;
+        this.width = 60;
+        this.height = 68;
         this.x = 100;
         this.y = 200;
 
@@ -27,51 +27,67 @@ class Player {
         this.lastFrameTime = performance.now();
         this.currentAnimation = "idle";
 
+        this.spriteSheet = new Image();
+        this.spriteSheet.onerror = () => {
+            console.warn("Falha ao carregar sprite sheet: assets/anplayer/sprites.png");
+        };
+        this.spriteSheet.src = "assets/anplayer/sprites.png";
+
+        const walkRowFrames = this.buildWalkRowFrames();
+        const idleRowFrames = this.buildIdleRowFrames();
+
         this.animations = {
             idle: {
-                right: this.loadFrames([
-                    "assets/animacao/parado/parado1.png",
-                    "assets/animacao/parado/parado2.png",
-                    "assets/animacao/parado/parado3.png",
-                    "assets/animacao/parado/parado4.png",
-                ]),
-                left: this.loadFrames([
-                    "assets/animacao/parado/parado_1.png",
-                    "assets/animacao/parado/parado_2.png",
-                    "assets/animacao/parado/parado_3.png",
-                    "assets/animacao/parado/parado_4.png",
-                ]),
+                right: idleRowFrames,
+                left: idleRowFrames,
             },
             walk: {
-                right: this.loadFrames([
-                    "assets/animacao/andar/andar1.png",
-                    "assets/animacao/andar/andar2.png",
-                    "assets/animacao/andar/andar3.png",
-                    "assets/animacao/andar/andar4.png",
-                    "assets/animacao/andar/andar5.png",
-                    "assets/animacao/andar/andar6.png",
-                ]),
-                left: this.loadFrames([
-                    "assets/animacao/andar/andar_1.png",
-                    "assets/animacao/andar/andar_2.png",
-                    "assets/animacao/andar/andar_3.png",
-                    "assets/animacao/andar/andar_4.png",
-                    "assets/animacao/andar/andar_5.png",
-                    "assets/animacao/andar/andar_6.png",
-                ]),
+                right: walkRowFrames,
+                left: walkRowFrames,
             },
         };
     }
 
-    loadFrames(paths) {
-        return paths.map((path) => {
-            const img = new Image();
-            img.onerror = () => {
-                console.warn("Falha ao carregar sprite:", path);
-            };
-            img.src = encodeURI(path);
-            return img;
+    buildWalkRowFrames() {
+        const top = 2;
+        const leftStart = 2;
+        const frameHeight = 48;
+        const gap = 2;
+        const frameWidths = [43, 42, 44, 43, 44, 44];
+
+        let currentX = leftStart;
+        return frameWidths.map((width) => {
+            const frame = { x: currentX, y: top, width, height: frameHeight };
+            currentX += width + gap;
+            return frame;
         });
+    }
+
+    buildIdleRowFrames() {
+        // Linha abaixo da animacao de andar:
+        // y base = 2 (topo da sheet) + 48 (altura andar) + 2 (gap) = 52
+        const baseY = 52;
+        const gap = 2;
+
+        const frames = [
+            { x: 2, y: baseY, width: 41, height: 49 },
+            { x: 45, y: baseY, width: 40, height: 49 },
+            { x: 87, y: baseY, width: 42, height: 49 },
+            // Ultimo frame padronizado com a mesma linha e altura dos demais
+            { x: 131, y: baseY, width: 42, height: 49 },
+        ];
+
+        // Validacao leve para manter os gaps de 2px entre os frames
+        for (let i = 1; i < frames.length; i++) {
+            const prev = frames[i - 1];
+            const curr = frames[i];
+            const expectedX = prev.x + prev.width + gap;
+            if (curr.x !== expectedX) {
+                frames[i].x = expectedX;
+            }
+        }
+
+        return frames;
     }
 
     // Direcao horizontal: -1 (esquerda), 0 (parado), 1 (direita)
@@ -178,10 +194,39 @@ class Player {
         this.updateAnimation(now);
 
         const frames = this.getCurrentFrames();
-        const sprite = frames[this.frameIndex];
+        const frame = frames[this.frameIndex];
 
-        if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-            ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
+        if (frame && this.spriteSheet.complete && this.spriteSheet.naturalWidth > 0) {
+            if (this.facing === "left") {
+                ctx.save();
+                ctx.translate(this.x + this.width, this.y);
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    this.spriteSheet,
+                    frame.x,
+                    frame.y,
+                    frame.width,
+                    frame.height,
+                    0,
+                    0,
+                    this.width,
+                    this.height
+                );
+                ctx.restore();
+                return;
+            }
+
+            ctx.drawImage(
+                this.spriteSheet,
+                frame.x,
+                frame.y,
+                frame.width,
+                frame.height,
+                this.x,
+                this.y,
+                this.width,
+                this.height
+            );
             return;
         }
 

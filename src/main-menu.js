@@ -1,12 +1,16 @@
 // Neblina do menu (camadas suaves)
 const fogLayer = document.getElementById("fire");
 
+const isMobileViewport = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
+const isVeryTallPhone = window.innerWidth <= 900 && window.innerHeight >= 1700;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
 
 let cloudCount = 30;
-if (isSmallScreen) cloudCount = 18;
+if (isMobileViewport) cloudCount = 14;
+if (isSmallScreen) cloudCount = 12;
+if (isVeryTallPhone) cloudCount = 10;
 if (lowCpu || prefersReducedMotion) cloudCount = 10;
 
 for (let i = 0; i < cloudCount; i++) {
