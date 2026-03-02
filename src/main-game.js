@@ -1,11 +1,15 @@
 // Canvas base do jogo
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const orientationOverlay = document.getElementById("orientation-lock");
+const miniMap = document.getElementById("miniMap");
+const isMobileDevice = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
 
 // Estado principal do jogo
 let player;
 let platforms = [];
 let gameRunning = false;
+let orientationBlocked = false;
 
 // Mapa simples de controles
 const controls = {
@@ -23,8 +27,38 @@ function buildPlatforms() {
     ];
 }
 
+function isPortraitMode() {
+    return window.innerHeight > window.innerWidth;
+}
+
+function updateOrientationGate() {
+    orientationBlocked = isMobileDevice && isPortraitMode();
+
+    if (orientationOverlay) {
+        orientationOverlay.classList.toggle("is-visible", orientationBlocked);
+    }
+
+    if (miniMap) {
+        miniMap.style.display = orientationBlocked ? "none" : "block";
+    }
+}
+
+async function tryLockLandscape() {
+    if (!isMobileDevice) return;
+    if (!window.screen || !screen.orientation || !screen.orientation.lock) return;
+
+    try {
+        await screen.orientation.lock("landscape");
+    } catch (_) {
+        // Alguns navegadores exigem fullscreen/gesto do usuario.
+    }
+}
+
 // Inicializa o jogo e comeca o loop
 function startGame() {
+    updateOrientationGate();
+    tryLockLandscape();
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -89,19 +123,36 @@ window.addEventListener("keyup", handleKeyUp);
 window.addEventListener("mousedown", () => {
     if (player) player.jump();
 });
+window.addEventListener(
+    "touchstart",
+    () => {
+        tryLockLandscape();
+    },
+    { passive: true }
+);
 
 window.addEventListener("resize", () => {
     if (!gameRunning) return;
+    updateOrientationGate();
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     buildPlatforms();
 });
+
+window.addEventListener("orientationchange", updateOrientationGate);
 
 window.addEventListener("DOMContentLoaded", startGame);
 
 // Loop principal
 function gameLoop() {
     if (!gameRunning) return;
+    updateOrientationGate();
+
+    if (orientationBlocked) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        requestAnimationFrame(gameLoop);
+        return;
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
