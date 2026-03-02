@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 const orientationOverlay = document.getElementById("orientation-lock");
 const miniMap = document.getElementById("miniMap");
 const isMobileDevice = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+let fullscreenRequested = false;
 
 // Estado principal do jogo
 let player;
@@ -43,6 +44,28 @@ function updateOrientationGate() {
     }
 }
 
+function getViewportSize() {
+    if (window.visualViewport) {
+        return {
+            width: Math.round(window.visualViewport.width),
+            height: Math.round(window.visualViewport.height),
+        };
+    }
+
+    return {
+        width: window.innerWidth,
+        height: window.innerHeight,
+    };
+}
+
+function resizeGameViewport() {
+    const viewport = getViewportSize();
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.width = viewport.width + "px";
+    canvas.style.height = viewport.height + "px";
+}
+
 async function tryLockLandscape() {
     if (!isMobileDevice) return;
     if (!window.screen || !screen.orientation || !screen.orientation.lock) return;
@@ -54,13 +77,30 @@ async function tryLockLandscape() {
     }
 }
 
+async function tryEnterFullscreen() {
+    if (!isMobileDevice || fullscreenRequested) return;
+    if (document.fullscreenElement) return;
+    if (!document.documentElement.requestFullscreen) return;
+
+    try {
+        await document.documentElement.requestFullscreen();
+        fullscreenRequested = true;
+        await tryLockLandscape();
+    } catch (_) {
+        // Nem todo navegador mobile permite fullscreen via script.
+    }
+}
+
 // Inicializa o jogo e comeca o loop
 function startGame() {
     updateOrientationGate();
     tryLockLandscape();
+    resizeGameViewport();
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    if (isMobileDevice) {
+        // Ajuda a recolher a barra do navegador em alguns browsers.
+        window.scrollTo(0, 1);
+    }
 
     player = new Player();
     buildPlatforms();
@@ -121,11 +161,13 @@ function handleKeyUp(e) {
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
 window.addEventListener("mousedown", () => {
+    tryEnterFullscreen();
     if (player) player.jump();
 });
 window.addEventListener(
     "touchstart",
     () => {
+        tryEnterFullscreen();
         tryLockLandscape();
     },
     { passive: true }
@@ -134,12 +176,19 @@ window.addEventListener(
 window.addEventListener("resize", () => {
     if (!gameRunning) return;
     updateOrientationGate();
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    resizeGameViewport();
     buildPlatforms();
 });
 
 window.addEventListener("orientationchange", updateOrientationGate);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+        if (!gameRunning) return;
+        updateOrientationGate();
+        resizeGameViewport();
+        buildPlatforms();
+    });
+}
 
 window.addEventListener("DOMContentLoaded", startGame);
 
@@ -164,7 +213,7 @@ function gameLoop() {
     }
 
     // Atualiza e desenha
-    player.update(platforms, canvas.width);
+    player.update(platforms, canvas.width, canvas.height);
     platforms.forEach((p) => p.draw(ctx));
     player.draw(ctx);
 

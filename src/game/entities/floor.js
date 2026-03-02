@@ -2,9 +2,9 @@
 class Floor {
     constructor(width, height) {
         this.x = 0;
-        this.y = height - 50;
+        this.y = height - 24;
         this.width = width;
-        this.height = 50;
+        this.height = 24;
         this.color = "#2ed573";
     }
 
@@ -28,4 +28,3 @@ class Platform {
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 }
-

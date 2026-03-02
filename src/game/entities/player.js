@@ -99,7 +99,7 @@ class Player {
     }
 
     // Atualiza posicao e resolve colisao com plataformas e limites da tela
-    update(platforms, canvasWidth) {
+    update(platforms, canvasWidth, canvasHeight) {
         const prevX = this.x;
         const prevY = this.y;
 
@@ -115,6 +115,29 @@ class Player {
         this.isGrounded = false;
 
         for (const p of platforms) {
+            const horizontalOverlap =
+                this.x < p.x + p.width &&
+                this.x + this.width > p.x;
+
+            const prevBottom = prevY + this.height;
+            const prevTop = prevY;
+            const prevRight = prevX + this.width;
+            const prevLeft = prevX;
+
+            // Evita atravessar plataforma/chao em quedas rapidas (comum em telas altas)
+            if (horizontalOverlap && this.vy >= 0 && prevBottom <= p.y && this.y + this.height >= p.y) {
+                this.y = p.y - this.height;
+                this.vy = 0;
+                this.isGrounded = true;
+                continue;
+            }
+
+            if (horizontalOverlap && this.vy < 0 && prevTop >= p.y + p.height && this.y <= p.y + p.height) {
+                this.y = p.y + p.height;
+                this.vy = 0;
+                continue;
+            }
+
             const intersects =
                 this.x < p.x + p.width &&
                 this.x + this.width > p.x &&
@@ -122,11 +145,6 @@ class Player {
                 this.y + this.height > p.y;
 
             if (!intersects) continue;
-
-            const prevBottom = prevY + this.height;
-            const prevTop = prevY;
-            const prevRight = prevX + this.width;
-            const prevLeft = prevX;
 
             if (prevBottom <= p.y) {
                 // caiu em cima
@@ -146,6 +164,13 @@ class Player {
                 this.x = p.x + p.width;
                 if (this.vx < 0) this.vx = 0;
             }
+        }
+
+        // Fallback de seguranca caso nao exista plataforma de chao
+        if (typeof canvasHeight === "number" && this.y + this.height > canvasHeight) {
+            this.y = canvasHeight - this.height;
+            this.vy = 0;
+            this.isGrounded = true;
         }
     }
 
