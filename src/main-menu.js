@@ -1,11 +1,69 @@
 // Neblina do menu (camadas suaves)
 const fogLayer = document.getElementById("fire");
+const orientationOverlay = document.getElementById("orientation-lock-menu");
+const uiContainer = document.getElementById("ui-container");
 
 const isMobileViewport = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
 const isVeryTallPhone = window.innerWidth <= 900 && window.innerHeight >= 1700;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+let fullscreenRequested = false;
+
+function isPortraitMode() {
+    return window.innerHeight > window.innerWidth;
+}
+
+function updateOrientationGate() {
+    const blocked = isMobileViewport && isPortraitMode();
+
+    if (orientationOverlay) {
+        orientationOverlay.classList.toggle("is-visible", blocked);
+    }
+
+    if (uiContainer) {
+        uiContainer.style.visibility = blocked ? "hidden" : "visible";
+    }
+}
+
+async function tryLockLandscape() {
+    if (!isMobileViewport) return;
+    if (!window.screen || !screen.orientation || !screen.orientation.lock) return;
+
+    try {
+        await screen.orientation.lock("landscape");
+    } catch (_) {
+        // Alguns navegadores exigem fullscreen/gesto do usuario.
+    }
+}
+
+async function tryEnterFullscreen() {
+    if (!isMobileViewport || fullscreenRequested) return;
+    if (document.fullscreenElement) return;
+    if (!document.documentElement.requestFullscreen) return;
+
+    try {
+        await document.documentElement.requestFullscreen();
+        fullscreenRequested = true;
+        await tryLockLandscape();
+    } catch (_) {
+        // Nem todo navegador mobile permite fullscreen via script.
+    }
+}
+
+updateOrientationGate();
+tryLockLandscape();
+
+window.addEventListener("resize", updateOrientationGate);
+window.addEventListener("orientationchange", updateOrientationGate);
+window.addEventListener(
+    "touchstart",
+    () => {
+        tryEnterFullscreen();
+        tryLockLandscape();
+    },
+    { passive: true }
+);
 
 let cloudCount = 30;
 if (isMobileViewport) cloudCount = 14;
