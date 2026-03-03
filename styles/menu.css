@@ -6,6 +6,10 @@ body {
     height: 100dvh;
     overflow: hidden;
     background: #000;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* Fundo do menu */
@@ -84,17 +88,6 @@ body {
     width: min(70vw, 520px);
 }
 
-/* Logo abaixo do Ãºltimo botÃ£o */
-#menu::after {
-    content: "";
-    display: block;
-    width: min(26vw, 130px);
-    aspect-ratio: 1 / 1;
-    margin-top: 14px;
-    background: url("../assets/img/logo.png") center / cover no-repeat;
-    border-radius: 50%;
-    filter: saturate(0.9) contrast(1.05);
-}
 
 #menu h1 {
     color: orange;
@@ -135,12 +128,13 @@ button:hover,
     #menu {
         left: 6vw;
         width: min(76vw, 420px);
-        top: 52%;
+        top: 64%;
     }
 
     #menu h1 {
         font-size: clamp(1.3rem, 7vw, 2rem);
-        margin-bottom: 0.5rem;
+        margin-top: 56px;
+        margin-bottom: 0.45rem;
     }
 
     button,
@@ -151,9 +145,5 @@ button:hover,
         line-height: 1.05;
     }
 
-    #menu::after {
-        width: min(24vw, 72px);
-        margin-top: -2px;
-    }
 }
 

@@ -1,4 +1,4 @@
-// Entidade do chão
+// Entidade do chao
 class Floor {
     constructor(width, height) {
         this.x = 0;
@@ -8,12 +8,13 @@ class Floor {
         this.color = "#2ed573";
     }
 
-    // Desenha o chão no canvas
+    // Desenha o chao no canvas
     draw(ctx) {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 }
+
 class Platform {
     constructor(x, y, width, height, color = "#2ed573") {
         this.x = x;

@@ -7,6 +7,10 @@ body {
     height: 100dvh;
     overflow: hidden;
     background: black;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* Canvas do jogo */
@@ -19,6 +23,79 @@ body {
     height: 100dvh;
     max-height: 100dvh;
     background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+}
+
+#back-menu {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10001;
+    text-decoration: none;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+}
+
+.menu-confirm {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10002;
+}
+
+.menu-confirm:target {
+    display: flex;
+}
+
+.menu-confirm-box {
+    width: min(92vw, 360px);
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+}
+
+.menu-confirm-box p {
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.menu-confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.menu-confirm-actions a {
+    text-decoration: none;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 13px;
+}
+
+.menu-confirm-actions .confirm-yes {
+    background: rgba(46, 213, 115, 0.25);
+    border-color: rgba(46, 213, 115, 0.6);
+}
+
+.menu-confirm-actions .confirm-no {
+    background: rgba(255, 71, 87, 0.22);
+    border-color: rgba(255, 71, 87, 0.55);
 }
 
 body.force-landscape #gameCanvas {
@@ -53,4 +130,64 @@ body.force-landscape #orientation-lock {
 
 #orientation-lock.is-visible {
     display: flex;
+}
+
+#touch-controls {
+    display: none;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+    #touch-controls {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding: 12px 14px calc(16px + env(safe-area-inset-bottom));
+        pointer-events: none;
+    }
+
+    #analog-base,
+    #touch-jump {
+        pointer-events: auto;
+    }
+
+    #analog-base {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        background: rgba(0, 0, 0, 0.28);
+        touch-action: none;
+    }
+
+    #analog-knob {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        transition: transform 50ms linear;
+    }
+
+    #touch-jump {
+        min-width: 92px;
+        min-height: 92px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        background: rgba(30, 30, 30, 0.35);
+        color: #fff;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        touch-action: manipulation;
+    }
 }

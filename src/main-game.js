@@ -4,6 +4,10 @@ const ctx = canvas.getContext("2d");
 const orientationOverlay = document.getElementById("orientation-lock");
 const miniMap = document.getElementById("miniMap");
 const isMobileDevice = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+const touchControls = document.getElementById("touch-controls");
+const analogBase = document.getElementById("analog-base");
+const analogKnob = document.getElementById("analog-knob");
+const touchJump = document.getElementById("touch-jump");
 
 // Estado principal do jogo
 let player;
@@ -17,6 +21,101 @@ const controls = {
     right: false,
     down: false,
 };
+
+let touchControlsReady = false;
+let analogActive = false;
+let analogPointerId = null;
+
+function isMenuConfirmOpen() {
+    return window.location.hash === "#confirm-menu";
+}
+
+function clearControls() {
+    controls.left = false;
+    controls.right = false;
+    controls.down = false;
+}
+
+function isEventInsideTouchControls(event) {
+    if (!touchControls || !event || !event.target) return false;
+    return touchControls.contains(event.target);
+}
+
+function resetAnalogStick() {
+    analogActive = false;
+    analogPointerId = null;
+
+    if (analogKnob) {
+        analogKnob.style.transform = "translate(-50%, -50%)";
+    }
+
+    clearControls();
+}
+
+function setAnalogFromPoint(clientX, clientY) {
+    if (!analogBase || !analogKnob) return;
+
+    const rect = analogBase.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxRadius = rect.width * 0.34;
+
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance > maxRadius && distance > 0) {
+        const scale = maxRadius / distance;
+        dx *= scale;
+        dy *= scale;
+    }
+
+    analogKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+
+    const normX = dx / maxRadius;
+    controls.left = normX < -0.22;
+    controls.right = normX > 0.22;
+}
+
+function setupTouchControls() {
+    if (touchControlsReady || !isMobileDevice) return;
+    if (!analogBase || !analogKnob || !touchJump) return;
+
+    touchControlsReady = true;
+
+    analogBase.addEventListener("pointerdown", (event) => {
+        if (isMenuConfirmOpen()) return;
+
+        analogActive = true;
+        analogPointerId = event.pointerId;
+        analogBase.setPointerCapture(event.pointerId);
+        setAnalogFromPoint(event.clientX, event.clientY);
+        event.preventDefault();
+    });
+
+    analogBase.addEventListener("pointermove", (event) => {
+        if (!analogActive) return;
+        if (event.pointerId !== analogPointerId) return;
+
+        setAnalogFromPoint(event.clientX, event.clientY);
+        event.preventDefault();
+    });
+
+    analogBase.addEventListener("pointerup", (event) => {
+        if (event.pointerId !== analogPointerId) return;
+        resetAnalogStick();
+    });
+
+    analogBase.addEventListener("pointercancel", () => {
+        resetAnalogStick();
+    });
+
+    touchJump.addEventListener("pointerdown", (event) => {
+        if (isMenuConfirmOpen()) return;
+        if (player) player.jump();
+        event.preventDefault();
+    });
+}
 
 // Cria o layout das plataformas
 function buildPlatforms() {
@@ -71,6 +170,8 @@ function resizeGameViewport() {
 
 // Inicializa o jogo e comeca o loop
 function startGame() {
+    if (gameRunning) return;
+
     updateOrientationGate();
     resizeGameViewport();
 
@@ -81,6 +182,7 @@ function startGame() {
 
     player = new Player();
     buildPlatforms();
+    setupTouchControls();
 
     gameRunning = true;
     gameLoop();
@@ -88,6 +190,12 @@ function startGame() {
 
 // Tecla pressionada
 function handleKeyDown(e) {
+    if (isMenuConfirmOpen()) {
+        clearControls();
+        e.preventDefault();
+        return;
+    }
+
     switch (e.code) {
         case "ArrowLeft":
         case "KeyA":
@@ -114,6 +222,12 @@ function handleKeyDown(e) {
 
 // Tecla solta
 function handleKeyUp(e) {
+    if (isMenuConfirmOpen()) {
+        clearControls();
+        e.preventDefault();
+        return;
+    }
+
     switch (e.code) {
         case "ArrowLeft":
         case "KeyA":
@@ -138,11 +252,14 @@ function handleKeyUp(e) {
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
 window.addEventListener("mousedown", () => {
+    if (isMenuConfirmOpen()) return;
     if (player) player.jump();
 });
 window.addEventListener(
     "touchstart",
-    () => {
+    (event) => {
+        if (isMenuConfirmOpen()) return;
+        if (isEventInsideTouchControls(event)) return;
         if (player) player.jump();
     },
     { passive: true }
@@ -171,6 +288,13 @@ window.addEventListener("DOMContentLoaded", startGame);
 function gameLoop() {
     if (!gameRunning) return;
     updateOrientationGate();
+
+    if (isMenuConfirmOpen()) {
+        resetAnalogStick();
+        clearControls();
+        requestAnimationFrame(gameLoop);
+        return;
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
