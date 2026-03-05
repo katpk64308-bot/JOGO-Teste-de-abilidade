@@ -1,10 +1,10 @@
 // Entidade do chao
 class Floor {
-    constructor(width, height) {
+    constructor(width, height, bottomGap = 61) {
         this.x = 0;
-        this.y = height - 24;
-        this.width = width;
         this.height = 24;
+        this.y = height - this.height - bottomGap;
+        this.width = width;
         this.color = "#2ed573";
     }
 

@@ -1,8 +1,13 @@
+(function () {
 // Canvas base do jogo
 const canvas = document.getElementById("gameCanvas");
+if (!canvas) return;
+
 const ctx = canvas.getContext("2d");
 const orientationOverlay = document.getElementById("orientation-lock");
 const miniMap = document.getElementById("miniMap");
+const gameScreen = document.getElementById("game-screen");
+const menuScreen = document.getElementById("menu-screen");
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches;
 const touchControls = document.getElementById("touch-controls");
 const analogBase = document.getElementById("analog-base");
@@ -176,10 +181,12 @@ function installMobileBackGuard() {
 
 // Cria o layout das plataformas
 function buildPlatforms() {
+    const viewport = getViewportSize();
+    const isLargeDesktop = !isMobileDevice && (viewport.width >= 1200 || viewport.height >= 750);
+    const floorBottomGap = isLargeDesktop ? 0 : 61;
+
     platforms = [
-        new Floor(canvas.width, canvas.height), // chao
-        new Platform(300, canvas.height - 180, 220, 20),
-        new Platform(620, canvas.height - 280, 180, 20),
+        new Floor(canvas.width, canvas.height, floorBottomGap), // chao
     ];
 }
 
@@ -220,11 +227,15 @@ function resizeGameViewport() {
     const rawHeight = forceLandscapeView ? viewport.width : viewport.height;
     const targetWidth = Math.max(BASE_GAME_WIDTH, rawWidth);
     const targetHeight = Math.max(BASE_GAME_HEIGHT, rawHeight);
+    const isSmallMobileScreen = isMobileDevice && (rawWidth <= 950 || rawHeight <= 600);
+    const zoomOutFactor = isSmallMobileScreen ? 1.65 : 1;
+    const renderWidth = Math.round(targetWidth * zoomOutFactor);
+    const renderHeight = Math.round(targetHeight * zoomOutFactor);
 
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    canvas.style.width = targetWidth + "px";
-    canvas.style.height = targetHeight + "px";
+    canvas.width = renderWidth;
+    canvas.height = renderHeight;
+    canvas.style.width = rawWidth + "px";
+    canvas.style.height = rawHeight + "px";
 }
 
 function syncPlayerToResizedViewport(prevWidth, prevHeight, nextWidth, nextHeight) {
@@ -320,6 +331,35 @@ function startGame() {
 
     gameRunning = true;
     gameLoop();
+}
+
+function showGameScreen() {
+    if (gameScreen) gameScreen.style.display = "block";
+}
+
+function hideGameScreen() {
+    if (gameScreen) gameScreen.style.display = "none";
+}
+
+function returnToMenuScreen() {
+    closeMenuConfirm();
+    gameRunning = false;
+    blockPlayerInputs();
+    hideGameScreen();
+    if (menuScreen) {
+        menuScreen.style.display = "block";
+    }
+    if (window.MenuScreenAPI && typeof window.MenuScreenAPI.onReturnFromGame === "function") {
+        window.MenuScreenAPI.onReturnFromGame();
+    }
+}
+
+function openGameFromMenu() {
+    if (menuScreen) {
+        menuScreen.style.display = "none";
+    }
+    showGameScreen();
+    startGame();
 }
 
 // Tecla pressionada
@@ -428,8 +468,10 @@ if (window.visualViewport) {
 }
 
 if (confirmMenuYes) {
-    confirmMenuYes.addEventListener("click", () => {
+    confirmMenuYes.addEventListener("click", (event) => {
+        event.preventDefault();
         allowBackNavigation = true;
+        returnToMenuScreen();
     });
 }
 
@@ -449,7 +491,10 @@ window.addEventListener("hashchange", () => {
     }
 });
 
-window.addEventListener("DOMContentLoaded", startGame);
+window.GameScreenAPI = {
+    openGameFromMenu,
+    returnToMenuScreen,
+};
 
 // Loop principal
 function gameLoop() {
@@ -478,3 +523,4 @@ function gameLoop() {
 
     requestAnimationFrame(gameLoop);
 }
+})();

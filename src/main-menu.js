@@ -1,7 +1,12 @@
+(function () {
 // Neblina do menu (camadas suaves)
 const fogLayer = document.getElementById("fire");
+if (!fogLayer) return;
+
 const orientationOverlay = document.getElementById("orientation-lock-menu");
 const uiContainer = document.getElementById("ui-container");
+const menuScreen = document.getElementById("menu-screen");
+const startGameButton = document.getElementById("start-game");
 const confirmExitYes = document.getElementById("confirm-exit-yes");
 
 const isMobileViewport = window.matchMedia("(pointer: coarse)").matches;
@@ -79,6 +84,15 @@ function installMobileBackGuard() {
         history.pushState({ mobileBackGuard: true }, "", window.location.href);
         tryEnterFullscreen();
     });
+}
+
+function showMenuScreen() {
+    if (menuScreen) menuScreen.style.display = "block";
+    updateOrientationGate();
+}
+
+function hideMenuScreen() {
+    if (menuScreen) menuScreen.style.display = "none";
 }
 
 updateOrientationGate();
@@ -164,6 +178,18 @@ if (confirmExitYes) {
     });
 }
 
+if (startGameButton) {
+    startGameButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        closeExitConfirm();
+        hideMenuScreen();
+
+        if (window.GameScreenAPI && typeof window.GameScreenAPI.openGameFromMenu === "function") {
+            window.GameScreenAPI.openGameFromMenu();
+        }
+    });
+}
+
 document.querySelectorAll("#confirm-exit .confirm-no").forEach((button) => {
     button.addEventListener("click", (event) => {
         if (!button.getAttribute("href") || button.getAttribute("href") !== "#") return;
@@ -172,3 +198,9 @@ document.querySelectorAll("#confirm-exit .confirm-no").forEach((button) => {
         tryEnterFullscreen();
     });
 });
+
+window.MenuScreenAPI = {
+    showMenuScreen,
+    onReturnFromGame: showMenuScreen,
+};
+})();
