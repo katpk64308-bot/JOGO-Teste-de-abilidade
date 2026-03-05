@@ -108,9 +108,11 @@ button,
     line-height: 1.2;
     text-decoration: none;
     display: block;
+    width: max-content;
     margin: 6px 0 0;
     text-shadow: 0 0 8px rgba(199, 125, 255, 0.5);
     transition: transform 160ms ease, color 160ms ease, text-shadow 160ms ease;
+    cursor: pointer;
 }
 
 button:hover,

@@ -57,6 +57,10 @@ body {
     display: flex;
 }
 
+.menu-confirm.is-open {
+    display: flex;
+}
+
 .menu-confirm-box {
     width: min(92vw, 360px);
     padding: 8px 10px;

@@ -13,6 +13,7 @@ const touchControls = document.getElementById("touch-controls");
 const analogBase = document.getElementById("analog-base");
 const analogKnob = document.getElementById("analog-knob");
 const touchJump = document.getElementById("touch-jump");
+const confirmMenu = document.getElementById("confirm-menu");
 const confirmMenuYes = document.getElementById("confirm-menu-yes");
 const confirmMenuNo = document.getElementById("confirm-menu-no");
 const BASE_GAME_WIDTH = 1366;
@@ -36,10 +37,9 @@ let analogActive = false;
 let analogPointerId = null;
 let fullscreenRequested = false;
 let allowBackNavigation = false;
-const menuConfirmHash = "#confirm-menu";
 
 function isMenuConfirmOpen() {
-    return window.location.hash === menuConfirmHash;
+    return !!(confirmMenu && confirmMenu.classList.contains("is-open"));
 }
 
 function clearControls() {
@@ -57,15 +57,15 @@ function blockPlayerInputs() {
 }
 
 function closeMenuConfirm() {
-    if (window.location.hash === menuConfirmHash) {
-        history.replaceState(history.state, "", window.location.pathname + window.location.search);
+    if (confirmMenu) {
+        confirmMenu.classList.remove("is-open");
     }
     blockPlayerInputs();
 }
 
 function openMenuConfirm() {
-    if (window.location.hash !== menuConfirmHash) {
-        window.location.hash = menuConfirmHash;
+    if (confirmMenu) {
+        confirmMenu.classList.add("is-open");
     }
     blockPlayerInputs();
 }
@@ -223,10 +223,12 @@ function resizeGameViewport() {
     const viewport = getViewportSize();
     const rawWidth = forceLandscapeView ? viewport.height : viewport.width;
     const rawHeight = forceLandscapeView ? viewport.width : viewport.height;
-    const targetWidth = Math.max(BASE_GAME_WIDTH, rawWidth);
-    const targetHeight = Math.max(BASE_GAME_HEIGHT, rawHeight);
     const isSmallMobileScreen = isMobileDevice && (rawWidth <= 950 || rawHeight <= 600);
-    const zoomOutFactor = isSmallMobileScreen ? 1.0 : 1;
+    const minGameWidth = isSmallMobileScreen ? rawWidth : BASE_GAME_WIDTH;
+    const minGameHeight = isSmallMobileScreen ? rawHeight : BASE_GAME_HEIGHT;
+    const targetWidth = Math.max(minGameWidth, rawWidth);
+    const targetHeight = Math.max(minGameHeight, rawHeight);
+    const zoomOutFactor = 1;
     const renderWidth = Math.round(targetWidth * zoomOutFactor);
     const renderHeight = Math.round(targetHeight * zoomOutFactor);
 
@@ -481,11 +483,19 @@ if (confirmMenuNo) {
     });
 }
 
-window.addEventListener("hashchange", () => {
-    if (isMenuConfirmOpen()) {
-        blockPlayerInputs();
-    } else {
-        clearControls();
+const backMenuButton = document.getElementById("back-menu");
+if (backMenuButton) {
+    backMenuButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        openMenuConfirm();
+    });
+}
+
+window.addEventListener("keydown", (event) => {
+    if (event.code === "Escape" && isMenuConfirmOpen()) {
+        event.preventDefault();
+        closeMenuConfirm();
+        tryEnterFullscreen();
     }
 });
 

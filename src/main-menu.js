@@ -64,6 +64,9 @@ function closeExitConfirm() {
     if (window.location.hash === exitConfirmHash) {
         history.replaceState(history.state, "", window.location.pathname + window.location.search);
     }
+    if (window.location.hash) {
+        window.location.hash = "";
+    }
 }
 
 function openExitConfirm() {
