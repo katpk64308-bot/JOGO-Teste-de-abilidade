@@ -75,7 +75,7 @@
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         </pre>
 
@@ -95,21 +95,41 @@
     <script src="src/main-menu.js"></script>
     <script>
         (function () {
+            const interactiveSelector =
+                "a, button, input, select, textarea, label, summary, details, [role='button'], [role='link'], [data-allow-default]";
+
+            const isInteractiveTarget = (event) => {
+                const target = event && event.target;
+                if (!(target instanceof Element)) return false;
+                return !!target.closest(interactiveSelector);
+            };
+
             const preventDefault = (event) => {
+                event.preventDefault();
+            };
+
+            const preventDefaultUnlessInteractive = (event) => {
+                if (isInteractiveTarget(event)) return;
                 event.preventDefault();
             };
 
             const preventDefaultForPointer = (event) => {
                 if (event.pointerType === "touch" || event.pointerType === "pen") {
-                    event.preventDefault();
+                    preventDefaultUnlessInteractive(event);
                 }
             };
 
-            document.addEventListener("touchstart", preventDefault, { passive: false, capture: true });
+            document.addEventListener("touchstart", preventDefaultUnlessInteractive, {
+                passive: false,
+                capture: true,
+            });
             document.addEventListener("pointerdown", preventDefaultForPointer, { passive: false, capture: true });
             document.addEventListener("contextmenu", preventDefault, { capture: true });
             document.addEventListener("dragstart", preventDefault, { capture: true });
             document.addEventListener("selectstart", preventDefault, { capture: true });
+            document.addEventListener("copy", preventDefault, { capture: true });
+            document.addEventListener("cut", preventDefault, { capture: true });
+            document.addEventListener("paste", preventDefault, { capture: true });
             document.addEventListener("gesturestart", preventDefault, { capture: true });
             document.addEventListener("gesturechange", preventDefault, { capture: true });
             document.addEventListener("gestureend", preventDefault, { capture: true });

@@ -18,6 +18,9 @@ const confirmMenuYes = document.getElementById("confirm-menu-yes");
 const confirmMenuNo = document.getElementById("confirm-menu-no");
 const BASE_GAME_WIDTH = 1366;
 const BASE_GAME_HEIGHT = 768;
+const SCENE_DARKNESS = 0.1; // 0.10 = cenario ~90% visivel
+const LIGHT_INNER_RADIUS_FACTOR = 0.18;
+const LIGHT_OUTER_RADIUS_FACTOR = 0.6;
 
 // Estado principal do jogo
 let player;
@@ -308,6 +311,25 @@ function handleGameResize() {
     }
 }
 
+function drawSceneLighting() {
+    if (!player) return;
+
+    const centerX = player.x + player.width / 2;
+    const centerY = player.y + player.height / 2;
+    const minDim = Math.min(canvas.width, canvas.height);
+    const innerRadius = Math.max(player.width, player.height, minDim * LIGHT_INNER_RADIUS_FACTOR);
+    const outerRadius = Math.max(innerRadius + 1, minDim * LIGHT_OUTER_RADIUS_FACTOR);
+
+    const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+    gradient.addColorStop(1, `rgba(0, 0, 0, ${SCENE_DARKNESS})`);
+
+    ctx.save();
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+}
+
 // Inicializa o jogo e comeca o loop
 function startGame() {
     if (gameRunning) {
@@ -528,6 +550,7 @@ function gameLoop() {
     player.update(platforms, canvas.width, canvas.height);
     platforms.forEach((p) => p.draw(ctx));
     player.draw(ctx);
+    drawSceneLighting();
 
     requestAnimationFrame(gameLoop);
 }
