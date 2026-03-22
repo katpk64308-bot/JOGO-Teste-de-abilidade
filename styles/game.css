@@ -43,6 +43,7 @@ body {
     --ui-arrow-x3: -940px;
     --ui-arrow-y: -1px;
     --game-zoom: 1;
+    --game-offset-y: 0px;
 }
 
 @keyframes ui-arrow-frames {
@@ -139,7 +140,7 @@ body {
 #gameCanvas {
     display: block;
     position: fixed;
-    top: 50%;
+    top: calc(50% + var(--game-offset-y));
     left: 50%;
     transform: translate(-50%, -50%) scale(var(--game-zoom));
     width: auto;
@@ -259,6 +260,10 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    width: min(240px, 78vw);
+    margin: 0 auto;
+    padding: 4px 0;
+    position: relative;
 }
 
 #confirm-menu .menu-confirm-actions a {
@@ -271,6 +276,27 @@ body {
     border-radius: 0;
     padding: 8px 10px;
     box-shadow: none;
+}
+
+#confirm-menu .menu-confirm-actions::before,
+#confirm-menu .menu-confirm-actions::after {
+    content: "";
+    display: block;
+    width: min(145px, 46vw);
+    height: 10px;
+    margin: 4px 0 6px auto;
+    background-image: url("../assets/img/icones/icn.png");
+    background-repeat: no-repeat;
+    background-size: 1024px 1024px;
+    background-position: -302px -1013px;
+    background-repeat: repeat-x;
+    image-rendering: pixelated;
+}
+
+#confirm-menu .menu-confirm-actions::after {
+    margin: 6px 0 0 auto;
+    transform: scaleY(-1);
+    transform-origin: center;
 }
 
 #confirm-menu.menu-confirm {
@@ -294,7 +320,7 @@ body {
 }
 
 body.force-landscape #gameCanvas {
-    top: 50%;
+    top: calc(50% + var(--game-offset-y));
     left: 50%;
     transform: translate(-50%, -50%) rotate(90deg) scale(var(--game-zoom));
     transform-origin: center center;

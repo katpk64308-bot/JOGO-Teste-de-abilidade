@@ -8,6 +8,7 @@ const orientationOverlay = document.getElementById("orientation-lock");
 const gameScreen = document.getElementById("game-screen");
 const menuScreen = document.getElementById("menu-screen");
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches;
+const supportsPointerEvents = "PointerEvent" in window;
 const touchControls = document.getElementById("touch-controls");
 const analogBase = document.getElementById("analog-base");
 const analogKnob = document.getElementById("analog-knob");
@@ -296,6 +297,7 @@ function resizeGameViewport() {
     let renderHeight = rawHeight;
     let displayWidth = rawWidth;
     let displayHeight = rawHeight;
+    let offsetY = 0;
 
     if (isMobileDevice) {
         // Preenche a tela no mobile, evitando bordas na lateral.
@@ -305,6 +307,12 @@ function resizeGameViewport() {
         // Mantem o mesmo "tamanho de mundo" do PC e apenas escala a exibicao no CSS.
         renderWidth = BASE_GAME_WIDTH;
         renderHeight = BASE_GAME_HEIGHT;
+
+        // Em telas muito largas (ex.: fullscreen), o canvas fica maior que a viewport.
+        // Ajusta o topo para mostrar mais o chao e evitar o "jogo muito para cima".
+        if (!forceLandscapeView && displayHeight > rawHeight) {
+            offsetY = -Math.round((displayHeight - rawHeight) / 2);
+        }
     } else {
         const minGameWidth = BASE_GAME_WIDTH;
         const minGameHeight = BASE_GAME_HEIGHT;
@@ -319,6 +327,7 @@ function resizeGameViewport() {
     canvas.height = renderHeight;
     canvas.style.width = displayWidth + "px";
     canvas.style.height = displayHeight + "px";
+    canvas.style.setProperty("--game-offset-y", offsetY + "px");
 }
 
 function syncPlayerToResizedViewport(prevWidth, prevHeight, nextWidth, nextHeight) {
@@ -565,7 +574,7 @@ if (window.visualViewport) {
 }
 
 if (confirmMenuYes) {
-    confirmMenuYes.addEventListener("click", (event) => {
+    bindImmediateTap(confirmMenuYes, (event) => {
         event.preventDefault();
         allowBackNavigation = true;
         returnToMenuScreen();
@@ -573,15 +582,49 @@ if (confirmMenuYes) {
 }
 
 if (confirmMenuNo) {
-    confirmMenuNo.addEventListener("click", (event) => {
+    bindImmediateTap(confirmMenuNo, (event) => {
         event.preventDefault();
         closeMenuConfirm();
         tryEnterFullscreen();
     });
 }
 
+function bindImmediateTap(element, handler) {
+    if (!element) return;
+    let lastTouchTime = 0;
+
+    if (supportsPointerEvents) {
+        element.addEventListener(
+            "pointerup",
+            (event) => {
+                if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
+                lastTouchTime = Date.now();
+                handler(event);
+            },
+            { passive: false }
+        );
+    } else {
+        element.addEventListener(
+            "touchend",
+            (event) => {
+                lastTouchTime = Date.now();
+                handler(event);
+            },
+            { passive: false }
+        );
+    }
+
+    element.addEventListener("click", (event) => {
+        if (Date.now() - lastTouchTime < 700) {
+            event.preventDefault();
+            return;
+        }
+        handler(event);
+    });
+}
+
 if (confirmMenuOptions) {
-    confirmMenuOptions.addEventListener("click", (event) => {
+    bindImmediateTap(confirmMenuOptions, (event) => {
         event.preventDefault();
         closeMenuConfirm();
         tryEnterFullscreen();

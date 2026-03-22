@@ -7,7 +7,9 @@ const orientationOverlay = document.getElementById("orientation-lock-menu");
 const uiContainer = document.getElementById("ui-container");
 const menuScreen = document.getElementById("menu-screen");
 const startGameButton = document.getElementById("start-game");
+const confirmExit = document.getElementById("confirm-exit");
 const confirmExitYes = document.getElementById("confirm-exit-yes");
+const confirmExitNo = document.querySelector("#confirm-exit .confirm-no");
 const exitButton = document.getElementById("exit-button");
 const serverScreen = document.getElementById("server-screen");
 const serverUI = serverScreen ? serverScreen.querySelector(".server-ui") : null;
@@ -85,6 +87,10 @@ async function tryEnterFullscreen() {
 }
 
 function closeExitConfirm() {
+    if (confirmExit) {
+        confirmExit.style.display = "none";
+    }
+
     if (window.location.hash === exitConfirmHash) {
         history.replaceState(history.state, "", window.location.pathname + window.location.search);
     }
@@ -94,6 +100,10 @@ function closeExitConfirm() {
 }
 
 function openExitConfirm() {
+    if (confirmExit) {
+        confirmExit.style.display = "flex";
+    }
+
     if (window.location.hash !== exitConfirmHash) {
         window.location.hash = exitConfirmHash;
     }
@@ -298,14 +308,14 @@ if (exitButton) {
     });
 }
 
-document.querySelectorAll("#confirm-exit .confirm-no").forEach((button) => {
-    bindImmediateTap(button, (event) => {
-        if (!button.getAttribute("href") || button.getAttribute("href") !== "#") return;
+if (confirmExitNo) {
+    bindImmediateTap(confirmExitNo, (event) => {
         event.preventDefault();
+        event.stopPropagation();
         closeExitConfirm();
         tryEnterFullscreen();
     });
-});
+}
 
 window.MenuScreenAPI = {
     showMenuScreen,
