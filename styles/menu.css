@@ -444,28 +444,65 @@ button:hover,
 
 @media (max-width: 480px), (max-height: 420px) {
     .server-select-box {
-        padding: 12px 10px 14px;
+        padding: 10px 8px 12px;
     }
 
     .server-select-box p {
-        font-size: 13px;
+        font-size: 11px;
     }
 
     .server-grid {
-        gap: 4px 8px;
+        gap: 2px 5px;
     }
 
     .server-slot {
-        --slot-size: 72px;
-        font-size: 9px;
+        --slot-size: 54px;
+        font-size: 7px;
+        letter-spacing: 0.2px;
     }
 
     .server-slot::before {
-        bottom: -24%;
-        transform: translateX(-50%) scale(calc(var(--icn-scale) * 1.9));
+        bottom: -20%;
+        transform: translateX(-50%) scale(calc(var(--icn-scale) * 1.55));
     }
 
     .server-slot:nth-child(1) {
-        margin-top: 32px;
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 380px), (max-height: 360px) {
+    .server-select-box {
+        padding: 8px 6px 10px;
+        max-height: 80dvh;
+    }
+
+    .server-select-box p {
+        font-size: 10px;
+    }
+
+    .server-grid {
+        gap: 2px 4px;
+        margin-bottom: 5px;
+    }
+
+    .server-slot {
+        --slot-size: 46px;
+        font-size: 6px;
+        letter-spacing: 0.15px;
+    }
+
+    .server-slot::before {
+        bottom: -16%;
+        transform: translateX(-50%) scale(calc(var(--icn-scale) * 1.4));
+    }
+
+    .server-slot:nth-child(1) {
+        margin-top: 14px;
+    }
+
+    .server-back {
+        font-size: 9px;
+        padding: 4px 7px;
     }
 }
